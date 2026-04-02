@@ -1,1 +1,16 @@
-site_name: My Docs
+site_name: smallzh's sql
+theme:
+    name: smzhbook
+
+nav:
+  - 首页: index.md
+  - 基础:
+    - SQL基础概念: basics/concepts.md
+    - 数据类型: basics/data-types.md
+    - 基本操作: basics/basic-operations.md
+    - 查询基础: basics/query-basics.md
+  - 常用:
+    - 高级查询: common/advanced-queries.md
+    - 常用函数: common/functions.md
+    - 索引与性能: common/indexes-performance.md
+    - 事务与并发: common/transactions-concurrency.md
