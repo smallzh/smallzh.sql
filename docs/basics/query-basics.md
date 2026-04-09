@@ -309,6 +309,165 @@ EXCEPT
 SELECT username FROM admin_users;
 ```
 
+## 0x08 GROUP BY 分组查询
+
+### 基本分组
+
+```sql
+-- 按单个字段分组
+SELECT country, COUNT(*) AS user_count 
+FROM users 
+GROUP BY country;
+
+-- 按多个字段分组
+SELECT country, city, COUNT(*) AS user_count 
+FROM users 
+GROUP BY country, city;
+```
+
+### 聚合函数结合分组
+
+```sql
+-- 统计每个国家的用户数量和平均年龄
+SELECT 
+    country,
+    COUNT(*) AS user_count,
+    AVG(age) AS avg_age,
+    MAX(age) AS max_age,
+    MIN(age) AS min_age
+FROM users 
+GROUP BY country;
+
+-- 统计每个状态的订单数量和总金额
+SELECT 
+    status,
+    COUNT(*) AS order_count,
+    SUM(total_amount) AS total_amount,
+    AVG(total_amount) AS avg_amount
+FROM orders 
+GROUP BY status;
+```
+
+### HAVING 过滤分组
+
+```sql
+-- HAVING 用于过滤分组后的结果（WHERE 用于过滤分组前）
+SELECT 
+    country,
+    COUNT(*) AS user_count
+FROM users 
+GROUP BY country
+HAVING COUNT(*) > 10;
+
+-- 组合使用：先过滤再分组再过滤
+SELECT 
+    department,
+    AVG(salary) AS avg_salary
+FROM employees
+WHERE status = 'active'
+GROUP BY department
+HAVING AVG(salary) > 5000;
+```
+
+### 按分组内时间排序取最新记录
+
+在实际业务中，经常需要获取每个分组内最新的记录，例如：每个用户的最新订单、每个部门的最新员工等。
+
+#### MySQL 8.0+ 窗口函数写法
+
+```sql
+-- 使用窗口函数 ROW_NUMBER() 按时间排序取每个用户的最新订单
+SELECT * FROM (
+    SELECT 
+        *,
+        ROW_NUMBER() OVER (
+            PARTITION BY user_id 
+            ORDER BY created_at DESC
+        ) AS rn
+    FROM orders
+) t
+WHERE rn = 1;
+
+-- 每个用户最近3笔订单
+SELECT * FROM (
+    SELECT 
+        *,
+        ROW_NUMBER() OVER (
+            PARTITION BY user_id 
+            ORDER BY created_at DESC
+        ) AS rn
+    FROM orders
+) t
+WHERE rn <= 3;
+```
+
+#### PostgreSQL 写法
+
+```sql
+-- PostgreSQL 同样支持窗口函数
+SELECT * FROM (
+    SELECT 
+        *,
+        ROW_NUMBER() OVER (
+            PARTITION BY user_id 
+            ORDER BY created_at DESC
+        ) AS rn
+    FROM orders
+) t
+WHERE rn = 1;
+
+-- 使用 DISTINCT ON（PostgreSQL 特有语法）
+SELECT DISTINCT ON (user_id) 
+    *
+FROM orders
+ORDER BY user_id, created_at DESC;
+```
+
+#### 子查询写法（兼容旧版本）
+
+```sql
+-- 每个用户最新订单（子查询方式）
+SELECT o.*
+FROM orders o
+WHERE o.created_at = (
+    SELECT MAX(created_at) 
+    FROM orders 
+    WHERE user_id = o.user_id
+);
+
+-- 每个部门的最新入职员工
+SELECT e.*
+FROM employees e
+WHERE e.hire_date = (
+    SELECT MAX(hire_date) 
+    FROM employees 
+    WHERE department_id = e.department_id
+);
+```
+
+#### 关联子查询取最新时间
+
+```sql
+-- 获取每个用户的最新订单时间
+SELECT 
+    user_id,
+    (SELECT MAX(created_at) FROM orders WHERE user_id = u.user_id) AS latest_order_time
+FROM users u;
+
+-- 获取每个用户及其最新订单的完整信息（JOIN 方式）
+SELECT u.*, o.*
+FROM users u
+LEFT JOIN (
+    SELECT o1.*
+    FROM orders o1
+    INNER JOIN (
+        SELECT user_id, MAX(created_at) AS max_date
+        FROM orders
+        GROUP BY user_id
+    ) o2 ON o1.user_id = o2.user_id AND o1.created_at = o2.max_date
+) o ON u.id = o.user_id;
+```
+
 ## 参考
 
 - [MySQL SELECT Statement](https://dev.mysql.com/doc/refman/8.0/en/select.html)

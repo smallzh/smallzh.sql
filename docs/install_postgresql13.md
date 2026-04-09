@@ -1,4 +1,4 @@
-MySql://www.enterprisedb.com/download-postgresql-binaries 下载对应的zip包
+从 https://www.enterprisedb.com/download-postgresql-binaries 下载对应的zip包
 
 解压到安装目录，比如：`E:\pgsql`
 
@@ -21,4 +21,65 @@ initdb -D "D:\postgresql\data" -E UTF8 -U postgres --locale="Chinese (Simplified
 注册成Window服务
 ```shell
 pg_ctl register -N "PostgreSQL13" -D "D:\postgresql\data" -l "D:\postgresql\log\logfile.log" -o "-p 5432"
+```
+
+## Docker 安装
+
+### 拉取镜像
+
+```shell
+docker pull postgres:13
+```
+
+### 运行容器
+
+```shell
+# 基本运行
+docker run -d \
+  --name postgresql13 \
+  -e POSTGRES_PASSWORD=your_password \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_DB=postgres \
+  -p 5432:5432 \
+  postgres:13
+```
+
+### 数据持久化
+
+```shell
+# 带数据卷持久化
+docker run -d \
+  --name postgresql13 \
+  -e POSTGRES_PASSWORD=your_password \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_DB=postgres \
+  -p 5432:5432 \
+  -v postgresql13_data:/var/lib/postgresql/data \
+  postgres:13
+```
+
+### 常用配置
+
+```shell
+# 自定义配置、数据持久化、开机自启
+docker run -d \
+  --name postgresql13 \
+  --restart=always \
+  -e POSTGRES_PASSWORD=your_password \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_DB=postgres \
+  -p 5432:5432 \
+  -v postgresql13_data:/var/lib/postgresql/data \
+  -v /path/to/postgresql.conf:/etc/postgresql/postgresql.conf \
+  postgres:13 -c config_file=/etc/postgresql/postgresql.conf
+```
+
+### 连接命令
+
+```shell
+# 进入容器
+docker exec -it postgresql13 psql -U postgres
+
+# 外部连接
+psql -h localhost -p 5432 -U postgres
 ```

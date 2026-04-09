@@ -4,6 +4,11 @@ theme:
 
 nav:
   - 首页: index.md
+  - MySQL8:
+    - 安装MySql8: install_mysql8.md
+    - 导入外部SQL文件: import-sql-file.md
+  - 安装Postgresql13: install_postgresql13.md
+  - 安装Elastic: install_elastic.md
   - 基础:
     - SQL基础概念: basics/concepts.md
     - 数据类型: basics/data-types.md
@@ -11,6 +16,7 @@ nav:
     - 查询基础: basics/query-basics.md
   - 常用:
     - 高级查询: common/advanced-queries.md
+    - 创建视图: common/views.md
     - 常用函数: common/functions.md
     - 索引与性能: common/indexes-performance.md
     - 事务与并发: common/transactions-concurrency.md
